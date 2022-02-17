@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-r)m8ky2u%n2ps^^^nf@-m_m%kt36ox++o=k)dof11!*!j47cwo'
+#SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY='django-insecure-r)m8ky2u%n2ps^^^nf@-m_m%kt36ox++o=k)dof11!*!j47cwo'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,6 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'djoser',
+    'drf_yasg',
+    'identity_manager',
+
 ]
 
 MIDDLEWARE = [
@@ -121,3 +130,42 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated'],
+}
+
+SIMPLE_JWT = {
+   'AUTH_HEADER_TYPES': ('JWT','Bearer',),
+}
+
+# Djoser settings
+DJOSER = {
+    'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
+    'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
+    'ACTIVATION_URL': '#/activate/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': True,
+    'SEND_CONFIRMATION_EMAIL': True,
+    'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
+    #'LOGIN_FIELD': 'email',
+    'PASSWORD_RESET_CONFIRM_URL': '#/password-reset/{uid}/{token}',
+    'USER_CREATE_PASSWORD_RETYPE': True,
+    'SET_PASSWORD_RETYPE': True,
+    'PASSWORD_RESET_CONFIRM_RETYPE': True,
+    'LOGOUT_ON_PASSWORD_CHANGE': True,
+    'SERIALIZERS': {},
+}
+
+
+# Email configuration
+EMAIL_HOST_USER='blowsome90@gmail.com'
+EMAIL_HOST_PASSWORD='secret@password'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_PORT = 587
+EMAIL_USE_TLS= True
+

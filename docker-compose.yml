@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  Db:
+    image: "postgres"
+    port: 5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=library-db
+    volumes:
+      - ./postgres-db:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: always
+
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=django-insecure-r)m8ky2u%n2ps^^^nf@-m_m%kt36ox++o=k)dof11!*!j47cwo
+      - WAIT_HOSTS=Db:5432
+      - WAIT_HOSTS_TIMEOUT=300
+      - WAIT_SLEEP_INTERVAL=30
+      - WAIT_HOST_CONNECT_TIMEOUT=30
+      - DB_NAME=library-db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=Db
+      - DB_PORT=5432
+    volumes:
+      - ./src/:/src/
+    depends_on:
+      - "Db"
+    command: sh -c "/wait && python manage.py runserver 0.0.0.0:8000"
+    restart: always
