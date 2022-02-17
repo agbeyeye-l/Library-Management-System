@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, RetrieveAPIView
 from library.models import Author, BookItem, BookLending, BookReservation, Library, Rack
 from library.serializers import AuthorSerializer, BookSerializer, LibrarySerializer,RackSerializer
-from identity_manager.permissions import IsAuthorized
+from identity_manager.permissions import IsLibrarianPermission, IsAdminPermission
 
 
 class AuthorAPIView(ListCreateAPIView):
@@ -13,7 +13,7 @@ class AuthorAPIView(ListCreateAPIView):
     """
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
-    permission_classes = [IsAuthenticated,IsAuthorized]
+    permission_classes = [IsAuthenticated,IsLibrarianPermission]
 
 
 class AuthorDetailView(RetrieveUpdateDestroyAPIView):
@@ -22,7 +22,7 @@ class AuthorDetailView(RetrieveUpdateDestroyAPIView):
     """
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
-    permission_classes = [IsAuthenticated,IsAuthorized]
+    permission_classes = [IsAuthenticated,IsLibrarianPermission]
 
 
 class LibraryAPIView(ListCreateAPIView):
@@ -31,7 +31,7 @@ class LibraryAPIView(ListCreateAPIView):
     """
     queryset = Library.objects.all()
     serializer_class = LibrarySerializer
-    permission_classes = [IsAuthenticated,IsAuthorized] 
+    permission_classes = [IsAuthenticated,IsAdminPermission] 
 
 
 class LibraryDetailView(RetrieveUpdateDestroyAPIView):
@@ -40,7 +40,7 @@ class LibraryDetailView(RetrieveUpdateDestroyAPIView):
     """
     queryset = Library.objects.all()
     serializer_class = LibrarySerializer
-    permission_classes = [IsAuthenticated,IsAuthorized] 
+    permission_classes = [IsAuthenticated,IsAdminPermission] 
 
 
 class RackAPIView(ListCreateAPIView):
@@ -49,7 +49,7 @@ class RackAPIView(ListCreateAPIView):
     """
     queryset = Rack.objects.all()
     serializer_class = RackSerializer
-    permission_classes = [IsAuthenticated,IsAuthorized] 
+    permission_classes = [IsAuthenticated,IsLibrarianPermission] 
 
 
 class RackDetailView(RetrieveUpdateDestroyAPIView):
@@ -58,7 +58,7 @@ class RackDetailView(RetrieveUpdateDestroyAPIView):
     """
     queryset = Rack.objects.all()
     serializer_class = RackSerializer
-    permission_classes = [IsAuthenticated,IsAuthorized] 
+    permission_classes = [IsAuthenticated,IsLibrarianPermission] 
 
 
 class BookItemAPIView(ListCreateAPIView):
@@ -67,7 +67,7 @@ class BookItemAPIView(ListCreateAPIView):
     """
     queryset = BookItem.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,IsLibrarianPermission]
 
 
 class BookItemDetailView(RetrieveUpdateDestroyAPIView):
@@ -76,4 +76,23 @@ class BookItemDetailView(RetrieveUpdateDestroyAPIView):
     """
     queryset = BookItem.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [IsAuthenticated,IsAuthorized] 
+    permission_classes = [IsAuthenticated,IsLibrarianPermission] 
+
+
+class ViewBooksAPIView(ListAPIView):
+    """
+    This class encapsulates the retrieval of a list of bookitems in a library
+    by a member
+    """
+    queryset = BookItem.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [IsAuthenticated]
+
+class ViewBooksAPIView(RetrieveAPIView):
+    """
+    This class encapsulates the retrieval of a single bookitem in a library
+    by a member
+    """
+    queryset = BookItem.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [IsAuthenticated] 
