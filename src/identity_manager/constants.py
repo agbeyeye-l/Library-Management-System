@@ -1,4 +1,4 @@
 
 class Account:
-    LIBRARIAN = "1"
-    MEMBER = "0"
+    LIBRARIAN = "Librarian"
+    MEMBER = "Member"

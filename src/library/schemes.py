@@ -1,6 +1,5 @@
-from enums import Enum
 
-class BookFormat(Enum):
+class BookFormat:
     HARDCOVER = "Hardcover"
     PAPERBACK = "Paperback"
     AUDIOBOOK = "Audiobook"
@@ -9,21 +8,21 @@ class BookFormat(Enum):
     JOURNAL = "Journal"
 
 
-class BookStatus(Enum):
+class BookStatus:
     AVAILABLE = "Available"
     RESERVED = "Reserved"
     LOANED = "Loaned"
     LOST = "Lost"
 
 
-class ReservationStatus(Enum):
+class ReservationStatus:
     WAITING = "Waiting"
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"
     PENDING = "Pending"
     NONE = "None"
 
-class AccountStatus(Enum):
+class AccountStatus:
     ACTIVE = "Active"
     CANCELLED = "Cancelled"
     BLACKLISTED = "Blacklisted"

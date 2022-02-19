@@ -35,7 +35,6 @@ class BookSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 # serializer class for book reservation
 class ReservationSerializer(serializers.ModelSerializer):
     class Meta:

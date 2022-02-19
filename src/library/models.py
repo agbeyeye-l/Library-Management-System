@@ -1,9 +1,11 @@
-from dbm.ndbm import library
+
 from django.db import models
 from django.forms import CharField
 from identity_manager.models import Account
+from library.schemes import BookStatus, ReservationStatus
+import datetime 
 
-
+BOOK_LEND_DURATION = 10
 # the author of a book
 class Author(models.Model):
     name = models.CharField(max_length=150)
@@ -49,8 +51,8 @@ class BookItem(models.Model):
     isReferenceOnly = models.BooleanField(default=False)
     borrowed = models.DateField()
     dueDate = models.DateField()
-    price = models.DecimalField(decimal_places=2)
-    status = models.CharField(max_length=100)
+    price = models.DecimalField(decimal_places=2, max_digits=4)
+    status = models.CharField(max_length=100, default=BookStatus.AVAILABLE)
     format = models.CharField(max_length=100)
     datePurchase = models.DateField()
     rack = models.ForeignKey(Rack, on_delete= models.CASCADE)
@@ -59,6 +61,24 @@ class BookItem(models.Model):
 
     def __str__(self):
         return self.title
+
+    def isBookLendable(self):
+        return self.status == BookStatus.AVAILABLE
+
+    def updateBookAfterLend(self):
+        today = datetime.datetime.now()
+        self.status = BookStatus.LOANED
+        self.borrowed = today
+        self.dueDate = today + datetime.timedelta(days=BOOK_LEND_DURATION)
+        self.save()
+        return
+
+    def returnBook(self):
+        self.status = BookStatus.AVAILABLE
+        self.save()
+
+    def reserveBook(self):
+        self.stat
 
 
 class BookReservation(models.Model):
@@ -73,6 +93,10 @@ class BookReservation(models.Model):
     def getReservationStatus(self):
         return self.reservationStatus
 
+    def hasReservation(self,user):
+        return True if (self.user == user and self.reservationStatus == ReservationStatus.COMPLETED) else False
+
+      
 
 class BookLending(models.Model):
     creationDate = models.DateField(auto_now_add=True)

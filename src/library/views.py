@@ -1,9 +1,12 @@
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.generics import (ListCreateAPIView, RetrieveUpdateDestroyAPIView,
+                                         ListAPIView, RetrieveAPIView)
+from rest_framework.views import APIView
 from library.models import Author, BookItem, BookLending, BookReservation, Library, Rack
-from library.serializers import AuthorSerializer, BookSerializer, LibrarySerializer,RackSerializer
+from library.serializers import (AuthorSerializer, BookSerializer, LibrarySerializer,
+                                    RackSerializer)
 from identity_manager.permissions import IsLibrarianPermission, IsAdminPermission
 
 
@@ -79,6 +82,7 @@ class BookItemDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated,IsLibrarianPermission] 
 
 
+
 class ViewBooksAPIView(ListAPIView):
     """
     This class encapsulates the retrieval of a list of bookitems in a library
@@ -88,7 +92,9 @@ class ViewBooksAPIView(ListAPIView):
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticated]
 
-class ViewBooksAPIView(RetrieveAPIView):
+
+
+class ViewBookDetailAPIView(RetrieveAPIView):
     """
     This class encapsulates the retrieval of a single bookitem in a library
     by a member
@@ -96,3 +102,7 @@ class ViewBooksAPIView(RetrieveAPIView):
     queryset = BookItem.objects.all()
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticated] 
+
+
+class ReserveBookAPIView(APIView):
+    pass
