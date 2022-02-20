@@ -48,3 +48,18 @@ class LendingSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookLending
         fields = '__all__'
+
+
+# serializer class for bookitem
+class BookItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookItem
+        fields = ['title','subject','publisher','author','barcode','format']
+
+
+# serializer class for successful book lending
+class LendedBookSerializer(serializers.ModelSerializer):
+    book = BookItemSerializer()
+    class Meta:
+        model = BookLending
+        fields = ['dueDate','book']

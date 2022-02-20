@@ -2,10 +2,11 @@
 from django.db import models
 from django.forms import CharField
 from identity_manager.models import Account
-from library.schemes import BookStatus, ReservationStatus
+from library.schemes import BookStatus, ReservationStatus, LendingStatus
 import datetime 
+from library import constants
 
-BOOK_LEND_DURATION = 10
+
 # the author of a book
 class Author(models.Model):
     name = models.CharField(max_length=150)
@@ -32,7 +33,7 @@ class Rack(models.Model):
     library = models.ForeignKey(Library, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return str(self.number)
 
 class BookItem(models.Model):
     CHOICES = (
@@ -55,21 +56,22 @@ class BookItem(models.Model):
     status = models.CharField(max_length=100, default=BookStatus.AVAILABLE)
     format = models.CharField(max_length=100)
     datePurchase = models.DateField()
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
     rack = models.ForeignKey(Rack, on_delete= models.CASCADE)
     library = models.ForeignKey(Library, on_delete=models.CASCADE)
 
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
-    def isBookLendable(self):
+    def isLendable(self):
         return self.status == BookStatus.AVAILABLE
 
     def updateBookAfterLend(self):
         today = datetime.datetime.now()
         self.status = BookStatus.LOANED
         self.borrowed = today
-        self.dueDate = today + datetime.timedelta(days=BOOK_LEND_DURATION)
+        self.dueDate = today + datetime.timedelta(days=constants.BOOK_LEND_DURATION)
         self.save()
         return
 
@@ -78,14 +80,14 @@ class BookItem(models.Model):
         self.save()
 
     def reserveBook(self):
-        self.stat
+        pass
 
 
 class BookReservation(models.Model):
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     bookItem = models.ForeignKey(BookItem, on_delete=models.CASCADE)
-    creationDate =  models.DateField(auto_now_add=True)
-    reservationStatus = models.CharField(max_length=100)
+    creationDate =  models.DateTimeField(auto_now_add=True)
+    reservationStatus = models.CharField(max_length=100,default=ReservationStatus.WAITING)
 
     def __str__(self):
         return self.bookItem.title
@@ -93,16 +95,31 @@ class BookReservation(models.Model):
     def getReservationStatus(self):
         return self.reservationStatus
 
+    def completed(self):
+        self.reservationStatus = ReservationStatus.COMPLETED
+        self.save()
+
+
     def hasReservation(self,user):
         return True if (self.user == user and self.reservationStatus == ReservationStatus.COMPLETED) else False
 
       
 
 class BookLending(models.Model):
-    creationDate = models.DateField(auto_now_add=True)
-    dueDate = models.DateField()
-    returnedDate = models.DateField()
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    book = models.ForeignKey(BookItem, on_delete=models.CASCADE)
+    creationDate = models.DateTimeField(auto_now_add=True)
+    dueDate = models.DateTimeField()
+    returnedDate = models.DateTimeField()
+    status = models.CharField(max_length=50,default=LendingStatus.HOLDING)
 
     def getReturnedDate(self):
-        return self.returnedDate
+        return str(self.returnedDate)
+
+    def returnedBook(self):
+        self.status = LendingStatus.RELEASE
+        self.save()
+
+    def __str__(self):
+        return self.book.title
 

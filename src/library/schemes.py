@@ -27,4 +27,9 @@ class AccountStatus:
     CANCELLED = "Cancelled"
     BLACKLISTED = "Blacklisted"
     CLOSED = "Closed"
+
+
+class LendingStatus:
+    HOLDING = "Holding"
+    RELEASE = "Release"
     
