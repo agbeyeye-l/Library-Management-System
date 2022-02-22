@@ -35,13 +35,6 @@ class BookSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# serializer class for book reservation
-class ReservationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BookReservation
-        fields = '__all__'
-
-
 
 # serializer class for book lending
 class LendingSerializer(serializers.ModelSerializer):
@@ -63,3 +56,13 @@ class LendedBookSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookLending
         fields = ['dueDate','book']
+
+
+
+
+# serializer class for book reservation
+class ReservationSerializer(serializers.ModelSerializer):
+    bookItem = BookItemSerializer()
+    class Meta:
+        model = BookReservation
+        fields = '__all__'

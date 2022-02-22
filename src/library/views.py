@@ -1,14 +1,15 @@
 import datetime
 from django.http import response
 from django.shortcuts import render
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import (ListCreateAPIView, RetrieveUpdateDestroyAPIView,
+from rest_framework.generics import (ListCreateAPIView, RetrieveUpdateDestroyAPIView,RetrieveDestroyAPIView,
                                          ListAPIView, RetrieveAPIView, GenericAPIView)
 from library.models import Author, BookItem, BookLending, BookReservation, Library, Rack
 from library.serializers import (AuthorSerializer, BookSerializer, LendedBookSerializer, LendingSerializer, LibrarySerializer,
-                                    RackSerializer)
+                                    RackSerializer, ReservationSerializer)
 from identity_manager.permissions import IsLibrarianPermission, IsAdminPermission
 from library import APIResponses 
 from identity_manager.models import Account
@@ -152,12 +153,15 @@ class LendBookAPIView(GenericAPIView):
 
 
 class ReserveBookAPIView(GenericAPIView):
-    """
-    This class implements reserving a book
-    """
+    
     def post(self,request,*args,**kwargs):
+        """
+        This method implements the reservation of a book by a user or librarian
+        """
         barcode = request.data['barcode']
         library = request.data['library']
+        memberId = request.data['user']
+        # check if user is authenticated
         if not request.user.is_authenticated:
             return Response(APIResponses.Response.UNAUTHENTICATED, status= status.HTTP_401_UNAUTHORIZED)
         book = BookItem.objects.filter(barcode=barcode,library=library).first()
@@ -166,10 +170,91 @@ class ReserveBookAPIView(GenericAPIView):
         # if book is referenced only
         if book.isReferenceOnly:
             return Response(APIResponses.Response.BOOK_IS_REFERENCED_ONLY_MESSAGE, status = status.HTTP_200_OK)
-        account = Account.objects.filter(user=request.user.id).first()
-        reservation = BookReservation.objects.filter( bookItem=book, reservationStatus=schemes.ReservationStatus.WAITING).first()
+        # get user making reservation
+        account = Account.objects.filter(user=memberId).first()
+        if not account:
+            return Response(APIResponses.Response.USER_DOES_EXIST, status = status.HTTP_404_NOT_FOUND)
+        # check if there is existing reservation made on this book by user
+        reservation = BookReservation.objects.filter(reservationStatus=schemes.ReservationStatus.WAITING,bookItem=book).first()
+        if reservation:
+            # if existing reservation is made by same member
+            reservation_by_this_member = BookReservation.objects.filter( Q(reservationStatus=schemes.ReservationStatus.WAITING) | Q(reservationStatus=schemes.ReservationStatus.PENDING),bookItem=book, user=account).first()
+            if reservation_by_this_member:
+                return Response(APIResponses.Response.EXISTING_RESERVATION_BY_MEMBER, status = status.HTTP_200_OK)
+        # if there is existing reservation set new reservation's status to pending else set to waiting
         reservation_status = schemes.ReservationStatus.PENDING if reservation else schemes.ReservationStatus.WAITING
         new_reservation = BookReservation.objects.create(user = account,bookItem=book, reservationStatus=reservation_status)
         new_reservation.save()
+        serialized_data = ReservationSerializer(instance = new_reservation)
+        return Response(serialized_data.data, status = status.HTTP_200_OK)
+
+    def get(self,request,*args,**kwargs):
+        """
+        This method allows a user to retrieve a specific reservation details
+        """
+        # get input data
+        barcode = request.data['barcode']
+        library = request.data['library']
+        user = request.data['user']
+        # get book with given barcode
+        book = BookItem.objects.filter(barcode=barcode,library=library).first()
+        # check if book exist
+        if not book:
+            return Response(APIResponses.Response.BOOK_NOT_FOUND_MESSAGE, status = status.HTTP_200_OK)
+        # get reservation for obtained book with input user
+        reservation = BookReservation.objects.filter( bookItem=book, user=user, reservationStatus=schemes.ReservationStatus.WAITING).first()
+        # if reservation is not made, return reservation not found message
+        if not reservation:
+            return Response(APIResponses.Response.RESERVATION_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
+        # return reservation details
+        return Response(ReservationSerializer(instance=reservation).data, status=status.HTTP_200_OK)
+
+
+    def delete(self,request,*args, **kwargs):
+        """
+        This method allows a user to cancel their reservation
+        """
+        reservation_id = request.data['id']
+        # check existence of reservation
+        reservation = BookReservation.objects.filter(pk=reservation_id).first()
+        if not reservation:
+            return Response(APIResponses.Response.RESERVATION_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
+        # cancel reservation
+        reservation.reservationStatus = schemes.ReservationStatus.CANCELLED
+        reservation.save()
+        return Response(APIResponses.Response.RESERVATION_CANCELLED_SUCCESSFULLY, status = status.HTTP_204_NO_CONTENT)
+
+
+
+
+class ReservationListAPIView(ListAPIView):
+    """
+    This class implements a view for a librarian to view
+    list of reservations by a user, a bookitem, creation date, or reservation status
+    """
+    queryset = BookReservation.objects.all()
+    serializer_class = ReservationSerializer
+    permission_classes = [IsAuthenticated, IsLibrarianPermission]
+    search_fields = ['user', 'bookItem', 'creationDate', 'reservationStatus']
+
+
+
+class ReservationDetailAPIView(RetrieveDestroyAPIView):
+    """
+    This class implements a view for a librarian to view or
+    cancel a book reservation
+    """
+    queryset = BookReservation.objects.all()
+    serializer_class = ReservationSerializer
+    permission_classes = [IsAuthenticated, IsLibrarianPermission]
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.reservationStatus = schemes.ReservationStatus.CANCELLED
+        instance.save()
+        return Response(APIResponses.Response.RESERVATION_CANCELLED_SUCCESSFULLY,status=status.HTTP_204_NO_CONTENT)
+
+        
+
 
         

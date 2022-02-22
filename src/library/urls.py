@@ -2,7 +2,7 @@ from django.urls import path
 from library.views import (BookItemDetailView, LibraryAPIView, 
                         LibraryDetailView, AuthorAPIView, AuthorDetailView, 
                         RackAPIView, BookItemAPIView, RackDetailView,ViewBooksAPIView,
-                        ViewBookDetailAPIView,LendBookAPIView)
+                        ViewBookDetailAPIView,LendBookAPIView, ReserveBookAPIView,ReservationListAPIView)
 
 urlpatterns = [
     path('libs/',LibraryAPIView.as_view(), name='libs'),
@@ -16,4 +16,6 @@ urlpatterns = [
     path('book/',ViewBooksAPIView.as_view(), name='book'),
     path('book-detail/<int:pk>',ViewBookDetailAPIView.as_view(), name='book-detail'),
     path('lend-book/',LendBookAPIView.as_view(), name='lend-book'),
+    path('reserve/', ReserveBookAPIView.as_view(), name='reserve-book'),
+    path('reservation-list/', ReservationListAPIView.as_view(), name='reservation-list'),
 ]
