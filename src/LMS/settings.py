@@ -167,6 +167,15 @@ DJOSER = {
     'SERIALIZERS': {},
 }
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    },
+}
 
 # Email configuration
 EMAIL_HOST_USER= env('EMAIL_HOST_USER')
