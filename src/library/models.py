@@ -121,5 +121,5 @@ class BookLending(models.Model):
         self.save()
 
     def __str__(self):
-        return self.book.title
+        return self.book.title 
 
