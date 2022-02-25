@@ -1,3 +1,4 @@
+from tkinter import END
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
@@ -17,6 +18,11 @@ class ENDPOINTS:
     RACK_DETAIL = reverse('rack-detail', kwargs={"pk":1})
     AUTHOR= reverse('author')
     AUTHOR_DETAIL= reverse('author-detail',kwargs={"pk":1})
+    BOOK_ITEM = reverse('book-item')
+    BOOK_ITEM_DETAIL = reverse('book-item-detail',kwargs={"pk":1})
+    VIEW_BOOK_LIST = reverse('book')
+    VIEW_BOOK = reverse('book-detail',kwargs={"pk":1})
+
 
 class Info:
     user_data = { 'username':'user2','password':'password@123',
@@ -24,35 +30,41 @@ class Info:
                 'role':'Librarian'}
     login_credentials = {'username':'user2','password':'password@123'}
     update_profile={'role':'Member'}
+    book = {
+            "ISBN": "ISB45466334345",
+            "title": "Software Architecture",
+            "subject": "Software Engineering",
+            "publisher": "Dr. Potassio Cessare",
+            "language": "English",
+            "numOfPages": 400,
+            "barcode": "SAFKDDDDFDKDAF111D",
+            "isReferenceOnly": False,
+            "borrowed": "2022-02-17",
+            "dueDate": "2022-02-17",
+            "price": "50.00",
+            "status": "Available",
+            "format": "Hardcopy",
+            "datePurchase": "2022-02-17",
+            "rack": 1,
+            "library": 1,
+            "author":1
+        }
 
 
-class CustomTestCase(APITestCase):
+class CustomTestCase(userProfileTestCase):
     def setUp(self):
-        # create a new user making a post request to djoser endpoint
-        self.user=self.client.post(ENDPOINTS.USER, data=Info.user_data)
-        # activate account
-        user = User.objects.filter(pk=self.user.data['id']).first()
-        user.is_active=True
-        user.is_superuser=True
-        user.save()
-        # set account to librarian
-        account = Account.objects.get(user=user)
-        account.role = 'Librarian'
-        account.save()
-        # obtain a json web token for the newly created user
-        response=self.client.post(ENDPOINTS.LOGIN,data=Info.login_credentials)
-        self.token=response.data['access']
-        self.api_authentication()
+        super().setUp()
         self.client.post(ENDPOINTS.LIBRARY, data={"name": "Community Library 1","description": "General community library"})
         self.client.post(ENDPOINTS.RACK, data={"number": "1","locationIdentifier": "North-east","library": 1})
         self.client.post(ENDPOINTS.AUTHOR, data={"name": "Ben Key","description": "Best selling author"})
+        self.client.post(ENDPOINTS.BOOK_ITEM, data=Info.book)
         
-    def api_authentication(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer '+self.token)
-
 
 
 class LibraryTestCase(CustomTestCase):
+    """
+    Test cases for creating, updating, and removing library
+    """
     def test_create_library(self):
         response = self.client.post(ENDPOINTS.LIBRARY, data={"name": "Community Library 1","description": "General community library"})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -68,6 +80,9 @@ class LibraryTestCase(CustomTestCase):
 
 
 class RackTestCase(CustomTestCase):
+    """
+    Test case for creating, updating, and removing racks
+    """
     def test_create_rack(self):
         response = self.client.post(ENDPOINTS.RACK, data={"number": "35","locationIdentifier": "North-east","library": 1})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -83,6 +98,9 @@ class RackTestCase(CustomTestCase):
 
 
 class AuthorTestCase(CustomTestCase):
+    """
+    Test case for adding, updating, and removing an author
+    """
     def test_add_author(self):
         response = self.client.post(ENDPOINTS.AUTHOR, data={"name": "Ben Key","description": "Best selling author"})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -97,3 +115,31 @@ class AuthorTestCase(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
+class BookItemTestCase(CustomTestCase):
+    """
+    Test cases for adding, updating, and removing book items by librarian
+    """
+    def test_add_book_item(self):
+        response = self.client.post(ENDPOINTS.BOOK_ITEM,data=Info.book)
+        self.assertEqual(response.status_code,status.HTTP_201_CREATED)
+
+    def test_update_book_item(self):
+        response = self.client.patch(ENDPOINTS.BOOK_ITEM_DETAIL, data = {"title":"AS 1290"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_remove_book_item(self):
+        response = self.client.delete(ENDPOINTS.BOOK_ITEM_DETAIL)
+        self.assertEqual(response.status_code,status.HTTP_204_NO_CONTENT)
+
+
+class ViewBookTestCase(CustomTestCase):
+    """
+    Test cases for viewing list and detail info  of single book by members
+    """
+    def test_view_book_list(self):
+        response = self.client.get(ENDPOINTS.VIEW_BOOK_LIST)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_view_single_book(self):
+        response = self.client.get(ENDPOINTS.VIEW_BOOK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
