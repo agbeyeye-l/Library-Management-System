@@ -11,9 +11,7 @@ class IsOwnerProfileOrReadOnly(BasePermission):
 
 class IsLibrarianPermission(BasePermission):
     def has_permission(self, request, view):
-        account = Account.objects.get(user=request.user)
-        print(request.user, account)
-        
+        account = Account.objects.get(user=request.user)        
         if account.role == constants.Account.LIBRARIAN:
             return True 
         return False
