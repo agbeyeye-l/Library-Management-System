@@ -27,6 +27,7 @@ class userProfileTestCase(APITestCase):
         # activate account
         user = User.objects.filter(pk=self.user.data['id']).first()
         user.is_active=True
+        user.is_superuser=True
         user.save()
         # set account to librarian
         account = Account.objects.get(user=user)
