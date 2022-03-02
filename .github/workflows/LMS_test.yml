@@ -1,0 +1,47 @@
+name: LMS build
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
+
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: ${{secrets.LMS_SECRET_KEY}}
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: user-db
+        ports: 
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+      - name: Cache dependency
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{runner.os}}-pip-${{ hashFiles('**/requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Setup python environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Check python version
+        run: python --version
+      - name: Install requirements
+        run: pip install -r requirements.txt
+      - name: Run Migration
+        run: python src/manage.py migrate
+      - name: Run Test
+        run: python src/manage.py test
