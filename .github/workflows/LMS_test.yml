@@ -13,6 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SECRET_KEY: ${{secrets.LMS_SECRET_KEY}}
+      EMAIL_HOST_USER: ${{secrets.EMAIL_HOST_USER}}
+      EMAIL_HOST_PASSWORD: ${{secrets.EMAIL_HOST_PASSWORD}}
+      EMAIL_HOST: ${{secrets.EMAIL_HOST}}
+      EMAIL_USE_TLS : ${{secrets.EMAIL_USE_TLS}}
+      DEBUG : ${{secrets.DEBUG}}
+      ACCESS_TOKEN_LIFETIME : ${{secrets.ACCESS_TOKEN_LIFETIME}}
+      REFRESH_TOKEN_LIFETIME : ${{secrets.REFRESH_TOKEN_LIFETIME}}
     services:
       postgres:
         image: postgres
