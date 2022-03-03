@@ -2,9 +2,9 @@ name: LMS build
 
 on:
   push:
-    branches: [ Main ]
+    branches: [ main ]
   pull_request:
-    branches: [ Main ]
+    branches: [ main ]
 
 jobs:
   # This workflow contains a single job called "build"
