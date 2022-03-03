@@ -8,7 +8,7 @@ RUN pip install -r requirements.txt
 
 COPY src /app/
 
-WORKDIR /app/src
+WORKDIR /src
 
 # Add docker-compose-wait tool -------------------
 ENV WAIT_VERSION 2.7.2
